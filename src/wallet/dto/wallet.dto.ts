@@ -17,3 +17,18 @@ export class FundWalletDto {
   @IsNumber()
   amount: number;
 }
+
+export class TransferDto {
+  @ApiProperty()
+  @IsUUID()
+  @IsNotEmpty()
+  senderId: string;
+
+  @ApiProperty()
+  @IsUUID()
+  @IsNotEmpty()
+  receiverId: string;
+
+  @IsNumber()
+  amount: number;
+}
