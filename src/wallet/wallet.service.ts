@@ -31,8 +31,6 @@ export class WalletService {
 
     if (wallet) {
       return wallet;
-    } else {
-      throw new NotFoundException('wallet not found');
     }
   }
 
@@ -45,7 +43,14 @@ export class WalletService {
       });
 
       if (!wallet) {
-        throw new NotFoundException('wallet not found');
+        const newWallet = await this.createWallet({ agentId: dto.agentId });
+
+        newWallet.balance += amount;
+        return await entityManager.update(
+          Wallet,
+          { agentId },
+          { balance: newWallet.balance },
+        );
       }
 
       wallet.balance += amount;
