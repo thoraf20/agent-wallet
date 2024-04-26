@@ -2,18 +2,15 @@ import {
   Body,
   ConflictException,
   Controller,
-  Headers,
+  Get,
   Logger,
+  Param,
   Post,
-  Request,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
 import { CreateWalletDto, FundWalletDto, TransferDto } from './dto/wallet.dto';
 import { ErrorResponseObject, SuccessResponseObject } from 'src/common/http';
-import jwt from 'jsonwebtoken';
-import { JWTPayload } from 'src/utils';
-import axios from 'axios';
 
 @ApiTags('Wallet')
 @Controller('wallets')
@@ -23,48 +20,8 @@ export class WalletController {
   constructor(private walletService: WalletService) {}
 
   @Post()
-  async createWallet(
-    // @Headers('Authorization') token: string,
-    @Request() req,
-    @Body() walletData: CreateWalletDto,
-  ) {
+  async createWallet(@Body() walletData: CreateWalletDto) {
     try {
-      // console.log(req);
-      // Verify and decode JWT token
-      // const agentInfo = this.verifyToken(token);
-      // Check if the agent exists
-      // const authorization = req.header('Authorization');
-
-      // console.log({ authorization });
-      // const accessToken = authorization?.split(' ')[1] as string;
-      // console.log({ accessToken });
-
-      // const decoded = jwt.decode(accessToken) as JWTPayload;
-      // console.log(decoded);
-
-      // const apiUrl = 'http://localhost:4007/api/users/email';
-
-      // try {
-      //   const response = await axios.post(
-      //     apiUrl,
-      //     {
-      //       email: decoded.email,
-      //     },
-      //     {
-      //       headers: {
-      //         // Authorization: `Bearer ${token}`,
-      //         'Content-Type': 'application/json',
-      //       },
-      //     },
-      //   );
-      //   console.log(response);
-
-      //   // Handle response
-      // } catch (error) {
-      //   // Handle error
-      //   console.log(error);
-      // }
-
       const agent = await this.walletService.findWalletByAgentId(
         walletData.agentId,
       );
@@ -82,11 +39,8 @@ export class WalletController {
     }
   }
 
-  @Post()
-  async fundWallet(
-    @Headers('Authorization') token: string,
-    @Body() walletData: FundWalletDto,
-  ) {
+  @Post('/fund')
+  async fundWallet(@Body() walletData: FundWalletDto) {
     try {
       const wallet = await this.walletService.fundWallet(walletData);
 
@@ -97,31 +51,29 @@ export class WalletController {
     }
   }
 
-  @Post()
-  async internalTransfer(
-    @Headers('Authorization') token: string,
-    @Body() walletData: TransferDto,
-  ) {
+  @Post('/transfer')
+  async internalTransfer(@Body() walletData: TransferDto) {
     try {
-      // Verify and decode JWT token
-      // const agentInfo = this.verifyToken(token);
-      // Check if the agent exists
-      // const agent = await this.walletService.findWalletByAgentId(
-      //   walletData.agentId,
-      // );
+      await this.walletService.internalTransfer(walletData);
 
-      // if (!agent) {
-      //   throw new ConflictException('Agent not found');
-      // }
-
-      const wallet = await this.walletService.internalTransfer(walletData);
-
-      return new SuccessResponseObject('wallet funded successfully.', wallet);
+      return new SuccessResponseObject('fund transfer successfully.', null);
     } catch (error) {
       this.logger.error(
         `Internal transfer error. ${error.message}`,
         error.stack,
       );
+      ErrorResponseObject(error);
+    }
+  }
+
+  @Get('/mine/:agentId')
+  async fetchWallet(@Param('agentId') agentId: string) {
+    try {
+      const wallet = await this.walletService.findWalletByAgentId(agentId);
+
+      return new SuccessResponseObject('wallet fetch successfully.', wallet);
+    } catch (error) {
+      this.logger.error(`Fetch wallet error. ${error.message}`, error.stack);
       ErrorResponseObject(error);
     }
   }

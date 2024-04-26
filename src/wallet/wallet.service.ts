@@ -84,7 +84,9 @@ export class WalletService {
       senderWallet.balance -= dto.amount;
       receiverWallet.balance = receiverWallet.balance + dto.amount;
 
-      return await entityManager.save([senderWallet, receiverWallet]);
+      await entityManager.save([senderWallet, receiverWallet]);
+
+      return;
     });
   }
 }
